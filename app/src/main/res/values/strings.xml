@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">HelloAgora</string>
+    <string name="agora_app_id">#YOUR APP ID#</string>
+</resources>
