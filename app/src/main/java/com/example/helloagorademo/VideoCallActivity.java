@@ -15,6 +15,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import io.agora.rtc.Constants;
 import io.agora.rtc.IRtcEngineEventHandler;
 
 public class VideoCallActivity extends AppCompatActivity {
@@ -41,14 +42,16 @@ public class VideoCallActivity extends AppCompatActivity {
         }
 
         @Override
-        public void onFirstRemoteVideoDecoded(final int uid, int width, int height, int elapsed) {
-            super.onFirstRemoteVideoDecoded(uid, width, height, elapsed);
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    setUpRemoteView(uid);
-                }
-            });
+        public void onRemoteVideoStateChanged(final int uid, int state, int reason, int elapsed) {
+            super.onRemoteVideoStateChanged(uid, state, reason, elapsed);
+            if (state == Constants.REMOTE_VIDEO_STATE_STARTING) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        setUpRemoteView(uid);
+                    }
+                });
+            }
         }
 
         @Override
