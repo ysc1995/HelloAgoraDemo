@@ -17,10 +17,13 @@ import androidx.core.content.ContextCompat;
 
 import io.agora.rtc.Constants;
 import io.agora.rtc.IRtcEngineEventHandler;
+import io.agora.rtc.RtcEngine;
+import io.agora.rtc.video.VideoCanvas;
 
 public class VideoCallActivity extends AppCompatActivity {
 
     private static final int PERMISSION_REQ_ID = 22;
+    private RtcEngine mRtcEngine;
     private RelativeLayout mRemoteContainer;
     private SurfaceView mRemoteView;
     private FrameLayout mLocalContainer;
@@ -120,35 +123,72 @@ public class VideoCallActivity extends AppCompatActivity {
     }
 
     private void removeRemoteView() {
-
+        if (mRemoteView != null) {
+            mRemoteContainer.removeView(mRemoteView);
+        }
+        mRemoteView = null;
     }
 
-
     private void setUpRemoteView(int uid) {
-
+        mRemoteView = RtcEngine.CreateRendererView(getBaseContext());
+        mRemoteContainer.addView(mRemoteView);
+        VideoCanvas remoteVideoCanvas = new VideoCanvas(mRemoteView, VideoCanvas.RENDER_MODE_HIDDEN, uid);
+        mRtcEngine.setupRemoteVideo(remoteVideoCanvas);
     }
 
     private void initializeEngine() {
-
+        try {
+            mRtcEngine = RtcEngine.create(getBaseContext(), getString(R.string.agora_app_id), mRtcEngineEventHandler);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private void setUpLocalView() {
+        mRtcEngine.enableVideo();
+        mLocalView = RtcEngine.CreateRendererView(getBaseContext());
+        mLocalContainer.addView(mLocalView);
+        mLocalView.setZOrderMediaOverlay(true);
 
+        VideoCanvas localVideoCanvas = new VideoCanvas(mLocalView, VideoCanvas.RENDER_MODE_HIDDEN, 0);
+        mRtcEngine.setupLocalVideo(localVideoCanvas);
     }
 
     private void joinChannel() {
-
+        mRtcEngine.joinChannel(null, "test", "", 0);
     }
 
     public void onCallClicked(View view) {
+        if (isCalling) {
+            isCalling = false;
+            removeRemoteView();
+            removeLocalView();
+            leaveChannel();
+        }else {
+            isCalling = true;
+            setUpLocalView();
+            joinChannel();
+        }
+    }
 
+    private void leaveChannel() {
+        mRtcEngine.leaveChannel();
+    }
+
+    private void removeLocalView() {
+        if (mLocalView != null) {
+            mLocalContainer.removeView(mLocalView);
+        }
+        mLocalView = null;
     }
 
     public void onSwitchCameraClicked(View view) {
-
+        mRtcEngine.switchCamera();
     }
 
     public void onLocalAudioMuteClicked(View view) {
-
+        isMuted = !isMuted;
+        mRtcEngine.muteLocalAudioStream(isMuted);
+        mMuteBtn.setImageResource(isMuted ? R.drawable.btn_mute : R.drawable.btn_unmute);
     }
 }
